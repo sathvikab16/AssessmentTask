@@ -1,17 +1,32 @@
-export default function Sidebar() {
-  return (
-    <aside className="w-64 min-h-screen bg-gray-900 text-white p-4">
-      <h2 className="text-xl font-bold mb-6">
-        AbleSpace
-      </h2>
+import Link from "next/link";
 
-      <nav className="flex flex-col gap-4">
-        <a href="/dashboard">Dashboard</a>
-        <a href="/board">Board</a>
-        <a href="/tasks">Tasks</a>
-        <a href="/users">Users</a>
-        <a href="/settings">Settings</a>
-      </nav>
-    </aside>
-  );
+
+export default function Sidebar() {
+  return (
+    <aside className="w-64 h-screen border-r bg-white p-4">
+      <h1 className="text-xl font-bold mb-8">Assessment Task</h1>
+
+
+      <nav className="space-y-3">
+        <Link href="/tasks" className="block p-2 rounded hover:bg-gray-100">
+          Tasks
+        </Link>
+
+
+        <Link href="/dashboard" className="block p-2 rounded hover:bg-gray-100">
+          Dashboard
+        </Link>
+
+
+        <Link href="/users" className="block p-2 rounded hover:bg-gray-100">
+          Users
+        </Link>
+
+
+        <Link href="/settings" className="block p-2 rounded hover:bg-gray-100">
+          Settings
+        </Link>
+      </nav>
+    </aside>
+  );
 }
