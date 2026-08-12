@@ -1,3 +1,4 @@
+```tsx
 import Link from "next/link";
 import {
   LayoutGrid,
@@ -5,6 +6,7 @@ import {
   FolderKanban,
   Users,
   Settings,
+  User,
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -52,6 +54,14 @@ export default function Sidebar() {
         </Link>
 
         <Link
+          href="/profile"
+          className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-100"
+        >
+          <User size={18} />
+          Profile
+        </Link>
+
+        <Link
           href="/settings"
           className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-100"
         >
@@ -62,3 +72,4 @@ export default function Sidebar() {
     </aside>
   );
 }
+```
