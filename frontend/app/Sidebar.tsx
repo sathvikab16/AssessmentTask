@@ -1,4 +1,3 @@
-```tsx
 import Link from "next/link";
 import {
   LayoutGrid,
@@ -72,4 +71,3 @@ export default function Sidebar() {
     </aside>
   );
 }
-```
