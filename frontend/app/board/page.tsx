@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTheme } from "next-themes";
+import ClickOutside from "@/components/ClickOutside";
 
 type Status = "To Do" | "Doing" | "Completed" | "On Hold";
 
@@ -211,19 +212,23 @@ function TaskCard({
       </div>
 
       {menuOpen && (
-        <div className="absolute right-3 top-10 z-20 w-32 rounded-lg border border-gray-200 bg-white p-1 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-          <button
-            type="button"
-            onClick={() => {
-              onDelete(task.id);
-              setMenuOpen(false);
-            }}
-            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-red-600 hover:bg-red-50"
-          >
-            <Trash2 size={15} />
-            Delete
-          </button>
-        </div>
+        <ClickOutside
+          onClickOutside={() => setMenuOpen(false)}
+        >
+          <div className="absolute right-3 top-10 z-20 w-32 rounded-lg border border-gray-200 bg-white p-1 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+            <button
+              type="button"
+              onClick={() => {
+                onDelete(task.id);
+                setMenuOpen(false);
+              }}
+              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+            >
+              <Trash2 size={15} />
+              Delete
+            </button>
+          </div>
+        </ClickOutside>
       )}
 
       {fields.members && (
@@ -407,7 +412,7 @@ function AddTaskModal({
               value={tags}
               onChange={(event) => setTags(event.target.value)}
               placeholder="Development, Testing"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white"
             />
           </div>
 
@@ -438,7 +443,6 @@ export default function BoardPage() {
 
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [search, setSearch] = useState("");
-
   const [filter, setFilter] = useState<Status | "All">("All");
 
   const [showFilter, setShowFilter] = useState(false);
@@ -477,15 +481,13 @@ export default function BoardPage() {
 
   const filteredTasks = useMemo(() => {
     return tasks.filter((task) => {
+      const searchText = search.toLowerCase();
+
       const matchesSearch =
-        task.title
-          .toLowerCase()
-          .includes(search.toLowerCase()) ||
-        task.assignee
-          .toLowerCase()
-          .includes(search.toLowerCase()) ||
+        task.title.toLowerCase().includes(searchText) ||
+        task.assignee.toLowerCase().includes(searchText) ||
         task.tags.some((tag) =>
-          tag.toLowerCase().includes(search.toLowerCase()),
+          tag.toLowerCase().includes(searchText),
         );
 
       const matchesFilter =
@@ -603,218 +605,117 @@ export default function BoardPage() {
               </div>
 
               {/* FIELDS BUTTON */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setShowFields((value) => !value)
-                  }
-                  className="flex h-10 items-center gap-2 rounded-lg border border-gray-200 px-3 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
-                >
-                  <SlidersHorizontal size={17} />
+              <ClickOutside
+                onClickOutside={() => setShowFields(false)}
+              >
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowFields((value) => !value)
+                    }
+                    className="flex h-10 items-center gap-2 rounded-lg border border-gray-200 px-3 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+                  >
+                    <SlidersHorizontal size={17} />
+                    <span>Fields</span>
+                    <ChevronDown size={14} />
+                  </button>
 
-                  <span>Fields</span>
+                  {showFields && (
+                    <div className="absolute right-0 top-12 z-50 w-[305px] rounded-xl border border-gray-200 bg-white p-3 shadow-xl dark:border-gray-700 dark:bg-gray-900">
+                      <div className="mb-3 grid grid-cols-2 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
+                        <button
+                          type="button"
+                          className="flex items-center justify-center gap-2 bg-white px-4 py-2.5 text-sm font-medium dark:bg-gray-800"
+                        >
+                          ☰ List
+                        </button>
 
-                  <ChevronDown size={14} />
-                </button>
+                        <button
+                          type="button"
+                          className="flex items-center justify-center gap-2 border-l border-gray-200 px-4 py-2.5 text-sm text-gray-600 dark:border-gray-700 dark:text-gray-300"
+                        >
+                          ▦ Board
+                        </button>
+                      </div>
 
-                {showFields && (
-                  <div className="absolute right-0 top-12 z-50 w-[305px] rounded-xl border border-gray-200 bg-white p-3 shadow-xl dark:border-gray-700 dark:bg-gray-900">
-                    {/* LIST / BOARD */}
-                    <div className="mb-3 grid grid-cols-2 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
-                      <button
-                        type="button"
-                        className="flex items-center justify-center gap-2 bg-white px-4 py-2.5 text-sm font-medium dark:bg-gray-800"
-                      >
-                        ☰ List
-                      </button>
+                      {(
+                        [
+                          ["priority", "Priority"],
+                          ["members", "Members"],
+                          ["dueDate", "Due Date"],
+                          ["labels", "Labels"],
+                          ["status", "Status"],
+                          ["reporter", "Reporter"],
+                        ] as const
+                      ).map(([key, label]) => (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => toggleField(key)}
+                          className="flex w-full items-center justify-between rounded-lg px-2 py-2.5 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-800"
+                        >
+                          <span>{label}</span>
 
-                      <button
-                        type="button"
-                        className="flex items-center justify-center gap-2 border-l border-gray-200 px-4 py-2.5 text-sm text-gray-600 dark:border-gray-700 dark:text-gray-300"
-                      >
-                        ▦ Board
-                      </button>
+                          <span
+                            className={`flex h-4 w-4 items-center justify-center rounded border ${
+                              fields[key]
+                                ? "border-gray-900 bg-gray-900 text-white"
+                                : "border-gray-300 dark:border-gray-600"
+                            }`}
+                          >
+                            {fields[key] && (
+                              <Check size={12} />
+                            )}
+                          </span>
+                        </button>
+                      ))}
                     </div>
-
-                    {/* PRIORITY */}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        toggleField("priority")
-                      }
-                      className="flex w-full items-center justify-between rounded-lg px-2 py-2.5 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-800"
-                    >
-                      <span>Priority</span>
-
-                      <span
-                        className={`flex h-4 w-4 items-center justify-center rounded border ${
-                          fields.priority
-                            ? "border-gray-900 bg-gray-900 text-white"
-                            : "border-gray-300 dark:border-gray-600"
-                        }`}
-                      >
-                        {fields.priority && (
-                          <Check size={12} />
-                        )}
-                      </span>
-                    </button>
-
-                    {/* MEMBERS */}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        toggleField("members")
-                      }
-                      className="flex w-full items-center justify-between rounded-lg px-2 py-2.5 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-800"
-                    >
-                      <span>Members</span>
-
-                      <span
-                        className={`flex h-4 w-4 items-center justify-center rounded border ${
-                          fields.members
-                            ? "border-gray-900 bg-gray-900 text-white"
-                            : "border-gray-300 dark:border-gray-600"
-                        }`}
-                      >
-                        {fields.members && (
-                          <Check size={12} />
-                        )}
-                      </span>
-                    </button>
-
-                    {/* DUE DATE */}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        toggleField("dueDate")
-                      }
-                      className="flex w-full items-center justify-between rounded-lg px-2 py-2.5 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-800"
-                    >
-                      <span>Due Date</span>
-
-                      <span
-                        className={`flex h-4 w-4 items-center justify-center rounded border ${
-                          fields.dueDate
-                            ? "border-gray-900 bg-gray-900 text-white"
-                            : "border-gray-300 dark:border-gray-600"
-                        }`}
-                      >
-                        {fields.dueDate && (
-                          <Check size={12} />
-                        )}
-                      </span>
-                    </button>
-
-                    {/* LABELS */}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        toggleField("labels")
-                      }
-                      className="flex w-full items-center justify-between rounded-lg px-2 py-2.5 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-800"
-                    >
-                      <span>Labels</span>
-
-                      <span
-                        className={`flex h-4 w-4 items-center justify-center rounded border ${
-                          fields.labels
-                            ? "border-gray-900 bg-gray-900 text-white"
-                            : "border-gray-300 dark:border-gray-600"
-                        }`}
-                      >
-                        {fields.labels && (
-                          <Check size={12} />
-                        )}
-                      </span>
-                    </button>
-
-                    {/* STATUS */}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        toggleField("status")
-                      }
-                      className="flex w-full items-center justify-between rounded-lg px-2 py-2.5 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-800"
-                    >
-                      <span>Status</span>
-
-                      <span
-                        className={`flex h-4 w-4 items-center justify-center rounded border ${
-                          fields.status
-                            ? "border-gray-900 bg-gray-900 text-white"
-                            : "border-gray-300 dark:border-gray-600"
-                        }`}
-                      >
-                        {fields.status && (
-                          <Check size={12} />
-                        )}
-                      </span>
-                    </button>
-
-                    {/* REPORTER */}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        toggleField("reporter")
-                      }
-                      className="flex w-full items-center justify-between rounded-lg px-2 py-2.5 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-800"
-                    >
-                      <span>Reporter</span>
-
-                      <span
-                        className={`flex h-4 w-4 items-center justify-center rounded border ${
-                          fields.reporter
-                            ? "border-gray-900 bg-gray-900 text-white"
-                            : "border-gray-300 dark:border-gray-600"
-                        }`}
-                      >
-                        {fields.reporter && (
-                          <Check size={12} />
-                        )}
-                      </span>
-                    </button>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              </ClickOutside>
 
               {/* FILTER */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setShowFilter((value) => !value)
-                  }
-                  className="flex h-10 items-center gap-2 rounded-lg border border-gray-200 px-3 text-sm text-gray-700 dark:border-gray-700 dark:text-gray-200"
-                >
-                  <Filter size={17} />
-                  Filter
-                </button>
+              <ClickOutside
+                onClickOutside={() => setShowFilter(false)}
+              >
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowFilter((value) => !value)
+                    }
+                    className="flex h-10 items-center gap-2 rounded-lg border border-gray-200 px-3 text-sm text-gray-700 dark:border-gray-700 dark:text-gray-200"
+                  >
+                    <Filter size={17} />
+                    Filter
+                  </button>
 
-                {showFilter && (
-                  <div className="absolute right-0 top-12 z-50 w-44 rounded-xl border border-gray-200 bg-white p-2 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-                    {(["All", ...statuses] as const).map(
-                      (status) => (
-                        <button
-                          key={status}
-                          type="button"
-                          onClick={() => {
-                            setFilter(status);
-                            setShowFilter(false);
-                          }}
-                          className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
-                        >
-                          {status}
+                  {showFilter && (
+                    <div className="absolute right-0 top-12 z-50 w-44 rounded-xl border border-gray-200 bg-white p-2 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                      {(["All", ...statuses] as const).map(
+                        (status) => (
+                          <button
+                            key={status}
+                            type="button"
+                            onClick={() => {
+                              setFilter(status);
+                              setShowFilter(false);
+                            }}
+                            className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
+                          >
+                            {status}
 
-                          {filter === status && (
-                            <Check size={15} />
-                          )}
-                        </button>
-                      ),
-                    )}
-                  </div>
-                )}
-              </div>
+                            {filter === status && (
+                              <Check size={15} />
+                            )}
+                          </button>
+                        ),
+                      )}
+                    </div>
+                  )}
+                </div>
+              </ClickOutside>
 
               {/* ADD TASK */}
               <button
@@ -831,10 +732,9 @@ export default function BoardPage() {
           <div className="overflow-x-auto p-5 lg:p-7">
             <div className="flex min-w-[1280px] gap-4">
               {statuses.map((status) => {
-                const columnTasks =
-                  filteredTasks.filter(
-                    (task) => task.status === status,
-                  );
+                const columnTasks = filteredTasks.filter(
+                  (task) => task.status === status,
+                );
 
                 return (
                   <section
